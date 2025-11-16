@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Hero from './components/Hero'
 import TodoInput from './components/TodoInput'
 import TodoList from './components/TodoList'
+import BackgroundFX from './components/BackgroundFX'
 
 const API = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'
 
@@ -9,6 +10,13 @@ export default function App() {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
+
+  const stats = useMemo(() => {
+    const total = tasks.length
+    const done = tasks.filter(t => t.completed).length
+    const active = total - done
+    return { total, done, active }
+  }, [tasks])
 
   const load = async () => {
     setFetching(true)
@@ -58,38 +66,49 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <Hero />
+    <div className="min-h-screen relative">
+      {/* Premium gradient background */}
+      <div className="absolute inset-0 bg-[radial-gradient(1200px_600px_at_-10%_-20%,rgba(160,120,255,0.35),transparent_60%),radial-gradient(1200px_600px_at_110%_0%,rgba(255,120,200,0.35),transparent_60%),linear-gradient(180deg,#0f0b22_0%,#151028_35%,#0b0a16_100%)]"></div>
+      <BackgroundFX />
 
-      <main className="-mt-10 md:-mt-14 z-10">
-        <div className="max-w-2xl mx-auto px-6">
-          <div className="bg-white/80 backdrop-blur rounded-2xl shadow-xl border border-gray-100 p-6 md:p-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl md:text-2xl font-semibold text-gray-900">Your Tasks</h2>
-              <button
-                onClick={load}
-                className="text-sm text-gray-500 hover:text-rose-600 transition"
-              >
-                Refresh
-              </button>
+      <div className="relative z-10 flex flex-col min-h-screen text-white">
+        <Hero stats={stats} onRefresh={load} />
+
+        <main className="-mt-14 md:-mt-24 z-10">
+          <div className="max-w-3xl mx-auto px-6">
+            <div className="glass-card p-6 md:p-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg md:text-xl font-semibold text-white/90">Your Tasks</h2>
+                <button
+                  onClick={load}
+                  className="text-sm text-white/50 hover:text-white/90 transition relative group"
+                >
+                  <span className="pr-6">Refresh</span>
+                  <span className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-gradient-to-tr from-fuchsia-400 to-violet-400 blur-sm opacity-0 group-hover:opacity-100 transition" />
+                </button>
+              </div>
+
+              <TodoInput onAdd={addTask} loading={loading} />
+
+              <div className="mt-6">
+                {fetching ? (
+                  <div className="space-y-3">
+                    <div className="skeleton h-12 rounded-xl" />
+                    <div className="skeleton h-12 rounded-xl" />
+                    <div className="skeleton h-12 rounded-xl" />
+                  </div>
+                ) : (
+                  <TodoList tasks={tasks} onToggle={toggleTask} onDelete={deleteTask} />
+                )}
+              </div>
             </div>
 
-            <TodoInput onAdd={addTask} loading={loading} />
-
-            <div className="mt-6">
-              {fetching ? (
-                <div className="text-center text-gray-500 py-8">Loading...</div>
-              ) : (
-                <TodoList tasks={tasks} onToggle={toggleTask} onDelete={deleteTask} />
-              )}
-            </div>
+            <p className="text-center text-xs text-white/40 mt-6">
+              Crafted for calm productivity with premium motion.
+            </p>
           </div>
-
-          <p className="text-center text-xs text-gray-400 mt-6">
-            Built with a minimalist, modern aesthetic and smooth interactions.
-          </p>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   )
 }
